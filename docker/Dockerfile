@@ -2,6 +2,9 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG PTLNX_INSTALLER=petalinux-v2024.1-05202009-installer.run
+ARG UBUNTU_MIRROR
+
+RUN [ -z "${UBUNTU_MIRROR}" ] || sed -i.bak s/archive.ubuntu.com/${UBUNTU_MIRROR}/g /etc/apt/sources.list
 
 # Environment
 # Disable user interaction with debian commands.
@@ -125,12 +128,12 @@ RUN ./$PTLNX_INSTALLER -y -p aarch64 -d /opt/petalinux
 
 USER root
 
-# Install tftp
-RUN apt install -y xinetd tftpd tftp
-COPY ./tftp /etc/xinetd.d/tftp
-RUN mkdir -p /tftpboot
-RUN chown -R nobody /tftpboot
-RUN chmod -R 777 /tftpboot
+# # Install tftp
+# RUN apt install -y xinetd tftpd tftp
+# COPY ./tftp /etc/xinetd.d/tftp
+# RUN mkdir -p /tftpboot
+# RUN chown -R nobody /tftpboot
+# RUN chmod -R 777 /tftpboot
 
 
 #RUN ./update_esdk.sh
@@ -151,7 +154,7 @@ RUN mkdir -p cache/{downloads,sstate-cache}
 RUN mkdir -p outputs
 RUN chmod 755 outputs
 
-# Source the petalinux stuff in the .bashrc
-RUN echo "export DL_DIR=$HOME/cache/downloads"        >> ~/.bashrc
-RUN echo "export SSTATE_DIR=$HOME/cache/sstate-cache" >> ~/.bashrc
+# # Source the petalinux stuff in the .bashrc
+# RUN echo "export DL_DIR=$HOME/cache/downloads"        >> ~/.bashrc
+# RUN echo "export SSTATE_DIR=$HOME/cache/sstate-cache" >> ~/.bashrc
 RUN echo "source /opt/petalinux/settings.sh"          >> ~/.bashrc
