@@ -22,6 +22,13 @@ Building the docker image
 2. Generate the image, either:
    1. Using `just`: `just image-build`
    2. **Or** using docker command directly: `docker buildx build -t petalinux:2024.1 --load docker`
+   3. **Or**:
+        ```bash
+        docker buildx build \
+          --build-arg UBUNTU_MIRROR=mirrors.bfsu.edu.cn \
+          -t petalinux:2024.1 \
+          --load docker
+        ```
 
 
 Using this image to generate a sample project
@@ -29,10 +36,29 @@ Using this image to generate a sample project
 
 Here are sample instructions to generate a project for the ZCU102 board:
 
+0. Setup sstate folder at `/tools/petalinux/sstate/2024.1`
 1. Download and place the corresponding BSP file (for instance `xilinx-zcu102-v2024.1-05230256.bsp`) in the `bsp` folder
 2. Start a petalinux shell (using one the following commands):
     1. Using just: `just shell`
-    2. **Or** using docker command directly: ` docker run --rm -it -v ./project:/project -v ./bsp:/bsp petalinux:2024.1 bash`
+    2. **Or** using docker command directly:
+        ```bash
+        docker run -ti --rm \
+        -e DISPLAY=$DISPLAY --net="host" \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v $HOME/.Xauthority:/home/vivado/.Xauthority \
+        -v /tools/petalinux/sstate/2024.1:/tools/petalinux/sstate/2024.1 \
+        -v /tftpboot:/tftpboot \
+        -v $(pwd):/home/vivado/project \
+        petalinux:2024.1 \
+        /bin/bash
+        ```
+    3. **Or** oneliner:
+        ```bash
+        tee -a ~/.bashrc << EOF
+        alias petadocker2024v1='docker run -it --rm -e DISPLAY=$DISPLAY --net="host" -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/.Xauthority:/home/vivado/.Xauthority -v /tools/petalinux/sstate/2024.1:/tools/petalinux/sstate/2024.1 -v /tftpboot:/tftpboot -v $(pwd):/home/vivado/project petalinux:2024.1 /bin/bash'
+        EOF
+        source ~/.bashrc
+        ```
 
 3. In the opened shell, create the project: `petalinux-create -t project -s /bsp/xilinx-zcu102-v2024.1-05230256.bsp`
 4. Build the project: `petalinux-build`
